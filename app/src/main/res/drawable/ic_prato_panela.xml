@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icone vetorial. Mesmo formato do email_1572_svgrepo_com que o professor -->
+<!-- importou para res/drawable na Aula 07 e usou com painterResource().     -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M12,3c-4.97,0 -9,3.13 -9,7h18c0,-3.87 -4.03,-7 -9,-7zM2,12v2h1v5c0,1.1 0.9,2 2,2h14c1.1,0 2,-0.9 2,-2v-5h1v-2H2zM19,19H5v-5h14v5z" />
+</vector>
