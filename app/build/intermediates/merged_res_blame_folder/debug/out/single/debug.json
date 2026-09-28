@@ -1,0 +1,54 @@
+[
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/drawable_suco_laranja.webp.flat",
+        "source": "com.example.aula_06.app-main-46:/drawable/suco_laranja.webp"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/drawable_espaguete.webp.flat",
+        "source": "com.example.aula_06.app-main-46:/drawable/espaguete.webp"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/drawable_lasanha_bolonhesa.webp.flat",
+        "source": "com.example.aula_06.app-main-46:/drawable/lasanha_bolonhesa.webp"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.example.aula_06.app-main-46:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.example.aula_06.app-main-46:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/drawable_salada_verao.jpg.flat",
+        "source": "com.example.aula_06.app-main-46:/drawable/salada_verao.jpg"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/drawable_sopa_abobora.webp.flat",
+        "source": "com.example.aula_06.app-main-46:/drawable/sopa_abobora.webp"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/drawable_tarta_morango.jpg.flat",
+        "source": "com.example.aula_06.app-main-46:/drawable/tarta_morango.jpg"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/xml_backup_rules.xml.flat",
+        "source": "com.example.aula_06.app-main-46:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/drawable_mini_hamburgueres.jpeg.flat",
+        "source": "com.example.aula_06.app-main-46:/drawable/mini_hamburgueres.jpeg"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/xml_data_extraction_rules.xml.flat",
+        "source": "com.example.aula_06.app-main-46:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.example.aula_06.app-main-46:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.example.aula_06.app-merged_res-44:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.example.aula_06.app-main-46:/drawable/ic_launcher_foreground.xml"
+    }
+]
