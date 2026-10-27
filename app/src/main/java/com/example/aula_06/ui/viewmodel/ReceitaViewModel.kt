@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.aula_06.auth.SessaoUsuario
 import com.example.aula_06.data.dal.ReceitaDAO
 import com.example.aula_06.model.Receita
+import com.example.aula_06.validation.ReceitaValidator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,6 +18,18 @@ class ReceitaViewModel(application: Application) : AndroidViewModel(application)
     var receitas by mutableStateOf<List<Receita>>(emptyList())
         private set
     var receita by mutableStateOf(Receita())
+        private set
+    var nome by mutableStateOf("")
+        private set
+    var tempo by mutableStateOf("")
+        private set
+    var porcoes by mutableStateOf("")
+        private set
+    var dificuldade by mutableStateOf("")
+        private set
+    var ingredientes by mutableStateOf("")
+        private set
+    var modoPreparo by mutableStateOf("")
         private set
     var carregando by mutableStateOf(false)
         private set
@@ -34,33 +47,103 @@ class ReceitaViewModel(application: Application) : AndroidViewModel(application)
         carregando = true
         mensagem = null
         viewModelScope.launch {
-            try { SessaoUsuario.exigirUsuario(); operacao()
-            } catch (erro: CancellationException) { throw erro
-            } catch (erro: IllegalArgumentException) { mensagem = erro.message
-            } catch (erro: Exception) { mensagem = "Nao foi possivel acessar as receitas. Tente novamente."
-            } finally { carregando = false }
+            try {
+                SessaoUsuario.exigirUsuario()
+                operacao()
+            } catch (erro: CancellationException) {
+                throw erro
+            } catch (erro: IllegalArgumentException) {
+                mensagem = erro.message
+            } catch (erro: Exception) {
+                mensagem = "Nao foi possivel acessar as receitas. Tente novamente."
+            } finally {
+                carregando = false
+            }
         }
     }
     fun listar() = executar { receitas = withContext(Dispatchers.IO) { dao.listar() } }
+    fun buscarPorId(id: Long) {
+        if (carregado && receita.id == id) return
+        carregar(id)
+    }
+
     fun carregar(id: Long) = executar {
         carregado = false
-        receita = if (id == 0L) Receita() else requireNotNull(withContext(Dispatchers.IO) { dao.buscarPorId(id) }) {
+        val encontrado = requireNotNull(withContext(Dispatchers.IO) { dao.buscarPorId(id) }) {
             "Receita nao encontrada."
         }
+        receita = encontrado
+        nome = encontrado.nome
+        tempo = encontrado.tempo
+        porcoes = encontrado.porcoes
+        dificuldade = encontrado.dificuldade
+        ingredientes = encontrado.ingredientes
+        modoPreparo = encontrado.modoPreparo
         carregado = true
     }
-    fun editar(valor: Receita) { if (!carregando && !salvo) receita = valor }
-    fun salvar() = executar {
-        require(carregado) { "Aguarde o carregamento da receita." }
-        val dados = receita.copy(nome = receita.nome.trim(), tempo = receita.tempo.trim(),
-            porcoes = receita.porcoes.trim(), dificuldade = receita.dificuldade.trim(),
-            ingredientes = receita.ingredientes.trim(), modoPreparo = receita.modoPreparo.trim())
-        require(dados.nome.isNotBlank() && dados.tempo.isNotBlank() && dados.porcoes.isNotBlank() &&
-            dados.dificuldade.isNotBlank() && dados.ingredientes.isNotBlank() && dados.modoPreparo.isNotBlank()) {
-            "Preencha todos os campos da receita."
-        }
+
+    fun mudarNome(valor: String) {
+        if (!carregando && !salvo) nome = valor
+    }
+    fun mudarTempo(valor: String) {
+        if (!carregando && !salvo) tempo = valor
+    }
+    fun mudarPorcoes(valor: String) {
+        if (!carregando && !salvo) porcoes = valor
+    }
+    fun mudarDificuldade(valor: String) {
+        if (!carregando && !salvo) dificuldade = valor
+    }
+    fun mudarIngredientes(valor: String) {
+        if (!carregando && !salvo) ingredientes = valor
+    }
+    fun mudarModoPreparo(valor: String) {
+        if (!carregando && !salvo) modoPreparo = valor
+    }
+
+    fun cadastrar() = executar {
+        ReceitaValidator.validar(
+            nome.trim(),
+            tempo.trim(),
+            porcoes.trim(),
+            dificuldade.trim(),
+            ingredientes.trim(),
+            modoPreparo.trim()
+        )
         withContext(Dispatchers.IO) {
-            if (dados.id == 0L) dao.cadastrar(dados) else dao.alterar(dados)
+            dao.cadastrar(Receita(
+                nome = nome.trim(),
+                tempo = tempo.trim(),
+                porcoes = porcoes.trim(),
+                dificuldade = dificuldade.trim(),
+                ingredientes = ingredientes.trim(),
+                modoPreparo = modoPreparo.trim()
+            ))
+        }
+        salvo = true
+    }
+
+    fun salvarAlteracoes() = executar {
+        require(carregado && receita.id > 0) { "Selecione um registro para alterar." }
+        ReceitaValidator.validar(
+            nome.trim(),
+            tempo.trim(),
+            porcoes.trim(),
+            dificuldade.trim(),
+            ingredientes.trim(),
+            modoPreparo.trim()
+        )
+        withContext(Dispatchers.IO) {
+            dao.alterar(Receita(
+                id = receita.id,
+                nome = nome.trim(),
+                tempo = tempo.trim(),
+                porcoes = porcoes.trim(),
+                dificuldade = dificuldade.trim(),
+                ingredientes = ingredientes.trim(),
+                modoPreparo = modoPreparo.trim(),
+                imagem = receita.imagem
+            ))
         }
         salvo = true
     }
@@ -69,5 +152,8 @@ class ReceitaViewModel(application: Application) : AndroidViewModel(application)
         withContext(Dispatchers.IO) { dao.excluir(receita.id) }
         excluido = true
     }
-    fun consumirResultado() { salvo = false; excluido = false }
+    fun consumirResultado() {
+        salvo = false
+        excluido = false
+    }
 }

@@ -11,3 +11,8 @@ local.properties
 # Arquivos gerados por compilacao nativa
 .cxx/
 .externalNativeBuild/
+
+# Material de apoio local, fora da entrega do aplicativo
+/docs/
+/app/src/test/
+/app/src/androidTest/

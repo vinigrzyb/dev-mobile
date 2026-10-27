@@ -12,28 +12,24 @@ import com.example.aula_06.ui.theme.*
 import com.example.aula_06.ui.viewmodel.ListaComprasViewModel
 
 @Composable
-fun CadastroItemCompraScreen(viewModel: ListaComprasViewModel, itemId: Long, aoVoltar: () -> Unit) {
-    LaunchedEffect(itemId) {
-        if (!viewModel.carregado) viewModel.carregar(itemId)
-    }
+fun CadastroItemCompraScreen(viewModel: ListaComprasViewModel, aoVoltar: () -> Unit) {
     LaunchedEffect(viewModel.salvo) {
         if (viewModel.salvo) { viewModel.consumirResultado(); aoVoltar() }
     }
-    val item = viewModel.item
     Column(Modifier.fillMaxSize().background(AzulFundo).imePadding()
         .verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         TextButton(onClick = aoVoltar, enabled = !viewModel.carregando) { Text("Voltar") }
-        Text(if (itemId == 0L) "Novo item" else "Editar item", color = AzulEscuro,
+        Text("Novo item", color = AzulEscuro,
             style = MaterialTheme.typography.titleLarge)
-        OutlinedTextField(value = item.nome, onValueChange = { viewModel.editar(item.copy(nome = it)) },
+        OutlinedTextField(value = viewModel.nome, onValueChange = viewModel::mudarNome,
             label = { Text("Nome do item") }, modifier = Modifier.fillMaxWidth(),
-            enabled = viewModel.carregado && !viewModel.carregando)
-        OutlinedTextField(value = item.quantidade, onValueChange = { viewModel.editar(item.copy(quantidade = it)) },
+            enabled = !viewModel.carregando)
+        OutlinedTextField(value = viewModel.quantidade, onValueChange = viewModel::mudarQuantidade,
             label = { Text("Quantidade") }, modifier = Modifier.fillMaxWidth(),
-            enabled = viewModel.carregado && !viewModel.carregando)
+            enabled = !viewModel.carregando)
         viewModel.mensagem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         if (viewModel.carregando) Text("Aguarde...")
-        Button(onClick = viewModel::salvar, enabled = viewModel.carregado && !viewModel.carregando && !viewModel.salvo,
+        Button(onClick = viewModel::cadastrar, enabled = !viewModel.carregando && !viewModel.salvo,
             modifier = Modifier.fillMaxWidth()) { Text("Salvar item") }
     }
 }

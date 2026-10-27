@@ -3,15 +3,12 @@ package com.example.aula_06.screens
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.aula_06.ui.theme.*
 import com.example.aula_06.ui.viewmodel.ReceitaViewModel
@@ -19,16 +16,11 @@ import com.example.aula_06.ui.viewmodel.ReceitaViewModel
 @Composable
 fun CadastroReceitaScreen(
     viewModel: ReceitaViewModel,
-    receitaId: Long = 0,
     modifier: Modifier = Modifier,
     aoSalvar: () -> Unit,
     aoVoltar: () -> Unit
 ) {
 
-    val receita = viewModel.receita
-    LaunchedEffect(receitaId) {
-        if (!viewModel.carregado) viewModel.carregar(receitaId)
-    }
     LaunchedEffect(viewModel.salvo) {
         if (viewModel.salvo) { viewModel.consumirResultado(); aoSalvar() }
     }
@@ -47,7 +39,7 @@ fun CadastroReceitaScreen(
             horizontalArrangement = Arrangement.Center
         ) {
             TextButton(onClick = aoVoltar, enabled = !viewModel.carregando) { Text("Voltar") }
-            Text(text = if (receitaId == 0L) "Nova Receita" else "Editar Receita", color = AzulEscuro, fontWeight = FontWeight.Medium)
+            Text(text = "Nova Receita", color = AzulEscuro, fontWeight = FontWeight.Medium)
         }
 
         Card(
@@ -65,10 +57,10 @@ fun CadastroReceitaScreen(
             ) {
                 item {
                     OutlinedTextField(
-                        value = receita.nome,
+                        value = viewModel.nome,
                         label = { Text("Nome da receita") },
-                        enabled = viewModel.carregado && !viewModel.carregando,
-                        onValueChange = { viewModel.editar(receita.copy(nome = it)) },
+                        enabled = !viewModel.carregando,
+                        onValueChange = viewModel::mudarNome,
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("Ex: Lasanha Bolonhesa Classica") }
                     )
@@ -81,20 +73,20 @@ fun CadastroReceitaScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             OutlinedTextField(
-                                value = receita.tempo,
-                        label = { Text("Tempo") },
-                        enabled = viewModel.carregado && !viewModel.carregando,
-                                onValueChange = { viewModel.editar(receita.copy(tempo = it)) },
+                                value = viewModel.tempo,
+                                label = { Text("Tempo") },
+                                enabled = !viewModel.carregando,
+                                onValueChange = viewModel::mudarTempo,
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = { Text("45 min") }
                             )
                         }
                         Column(modifier = Modifier.weight(1f)) {
                             OutlinedTextField(
-                                value = receita.porcoes,
-                        label = { Text("Porcoes") },
-                        enabled = viewModel.carregado && !viewModel.carregando,
-                                onValueChange = { viewModel.editar(receita.copy(porcoes = it)) },
+                                value = viewModel.porcoes,
+                                label = { Text("Porcoes") },
+                                enabled = !viewModel.carregando,
+                                onValueChange = viewModel::mudarPorcoes,
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = { Text("4") }
                             )
@@ -104,10 +96,10 @@ fun CadastroReceitaScreen(
 
                 item {
                     OutlinedTextField(
-                        value = receita.dificuldade,
+                        value = viewModel.dificuldade,
                         label = { Text("Dificuldade") },
-                        enabled = viewModel.carregado && !viewModel.carregando,
-                        onValueChange = { viewModel.editar(receita.copy(dificuldade = it)) },
+                        enabled = !viewModel.carregando,
+                        onValueChange = viewModel::mudarDificuldade,
                         modifier = Modifier.fillMaxWidth(),
                         placeholder = { Text("EX: Facil") }
                     )
@@ -115,10 +107,10 @@ fun CadastroReceitaScreen(
 
                 item {
                     OutlinedTextField(
-                        value = receita.ingredientes,
+                        value = viewModel.ingredientes,
                         label = { Text("Ingredientes") },
-                        enabled = viewModel.carregado && !viewModel.carregando,
-                        onValueChange = { viewModel.editar(receita.copy(ingredientes = it)) },
+                        enabled = !viewModel.carregando,
+                        onValueChange = viewModel::mudarIngredientes,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp),
@@ -128,10 +120,10 @@ fun CadastroReceitaScreen(
 
                 item {
                     OutlinedTextField(
-                        value = receita.modoPreparo,
+                        value = viewModel.modoPreparo,
                         label = { Text("Modo de preparo") },
-                        enabled = viewModel.carregado && !viewModel.carregando,
-                        onValueChange = { viewModel.editar(receita.copy(modoPreparo = it)) },
+                        enabled = !viewModel.carregando,
+                        onValueChange = viewModel::mudarModoPreparo,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp),
@@ -143,8 +135,8 @@ fun CadastroReceitaScreen(
                     viewModel.mensagem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                     if (viewModel.carregando) Text("Aguarde...")
                     Button(
-                        onClick = viewModel::salvar,
-                        enabled = viewModel.carregado && !viewModel.carregando && !viewModel.salvo,
+                        onClick = viewModel::cadastrar,
+                        enabled = !viewModel.carregando && !viewModel.salvo,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = AzulEscuro)
                     ) {

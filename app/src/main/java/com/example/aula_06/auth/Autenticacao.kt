@@ -5,7 +5,7 @@ import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
-// Mesmo mecanismo de AuthManager na aula 14; contas persistidas pelo UsuarioDAO.
+// Gera e verifica o hash da senha; contas persistidas pelo UsuarioDAO.
 object Autenticacao {
     fun criarSalt(): ByteArray = ByteArray(16).also { SecureRandom().nextBytes(it) }
     fun gerarHash(senha: String, salt: ByteArray): ByteArray {

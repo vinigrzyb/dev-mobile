@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.aula_06.auth.SessaoUsuario
 import com.example.aula_06.data.dal.ItemCompraDAO
 import com.example.aula_06.model.ItemCompra
+import com.example.aula_06.validation.ItemCompraValidator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,6 +18,10 @@ class ListaComprasViewModel(application: Application) : AndroidViewModel(applica
     var itens by mutableStateOf<List<ItemCompra>>(emptyList())
         private set
     var item by mutableStateOf(ItemCompra())
+        private set
+    var nome by mutableStateOf("")
+        private set
+    var quantidade by mutableStateOf("")
         private set
     var carregando by mutableStateOf(false)
         private set
@@ -32,28 +37,70 @@ class ListaComprasViewModel(application: Application) : AndroidViewModel(applica
         carregando = true
         mensagem = null
         viewModelScope.launch {
-            try { SessaoUsuario.exigirUsuario(); operacao()
-            } catch (erro: CancellationException) { throw erro
-            } catch (erro: IllegalArgumentException) { mensagem = erro.message
-            } catch (erro: Exception) { mensagem = "Nao foi possivel acessar as compras. Tente novamente."
-            } finally { carregando = false }
+            try {
+                SessaoUsuario.exigirUsuario()
+                operacao()
+            } catch (erro: CancellationException) {
+                throw erro
+            } catch (erro: IllegalArgumentException) {
+                mensagem = erro.message
+            } catch (erro: Exception) {
+                mensagem = "Nao foi possivel acessar as compras. Tente novamente."
+            } finally {
+                carregando = false
+            }
         }
     }
     fun listar() = executar { itens = withContext(Dispatchers.IO) { dao.listar() } }
+    fun buscarPorId(id: Long) {
+        if (carregado && item.id == id) return
+        carregar(id)
+    }
+
     fun carregar(id: Long) = executar {
         carregado = false
-        item = if (id == 0L) ItemCompra() else requireNotNull(withContext(Dispatchers.IO) { dao.buscarPorId(id) }) {
+        val encontrado = requireNotNull(withContext(Dispatchers.IO) { dao.buscarPorId(id) }) {
             "Item nao encontrado."
         }
+        item = encontrado
+        nome = encontrado.nome
+        quantidade = encontrado.quantidade
         carregado = true
     }
-    fun editar(valor: ItemCompra) { if (!carregando && !salvo) item = valor }
-    fun salvar() = executar {
-        require(carregado) { "Aguarde o carregamento do item." }
-        val dados = item.copy(nome = item.nome.trim(), quantidade = item.quantidade.trim())
-        require(dados.nome.isNotBlank() && dados.quantidade.isNotBlank()) { "Informe o nome e a quantidade." }
+
+    fun mudarNome(valor: String) {
+        if (!carregando && !salvo) nome = valor
+    }
+    fun mudarQuantidade(valor: String) {
+        if (!carregando && !salvo) quantidade = valor
+    }
+
+    fun cadastrar() = executar {
+        ItemCompraValidator.validar(
+            nome.trim(),
+            quantidade.trim()
+        )
         withContext(Dispatchers.IO) {
-            if (dados.id == 0L) dao.cadastrar(dados) else dao.alterar(dados)
+            dao.cadastrar(ItemCompra(
+                nome = nome.trim(),
+                quantidade = quantidade.trim()
+            ))
+        }
+        salvo = true
+    }
+
+    fun salvarAlteracoes() = executar {
+        require(carregado && item.id > 0) { "Selecione um registro para alterar." }
+        ItemCompraValidator.validar(
+            nome.trim(),
+            quantidade.trim()
+        )
+        withContext(Dispatchers.IO) {
+            dao.alterar(ItemCompra(
+                id = item.id,
+                nome = nome.trim(),
+                quantidade = quantidade.trim()
+            ))
         }
         salvo = true
     }

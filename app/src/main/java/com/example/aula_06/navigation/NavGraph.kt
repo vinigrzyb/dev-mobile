@@ -20,7 +20,7 @@ fun NavGraph() {
     val entradaAtual by navController.currentBackStackEntryAsState()
     val destino = entradaAtual?.destination
     val usuarioAtual = SessaoUsuario.usuarioId
-    // Mesmo controle de acesso de AppNavigation na aula 14.
+    // Redireciona para o login quando a sessao termina.
     LaunchedEffect(destino, usuarioAtual) {
         if (destino != null && !destino.hasRoute<Login>() && usuarioAtual == null) {
             navController.navigate(Login) {
@@ -31,11 +31,17 @@ fun NavGraph() {
     }
     Scaffold(topBar = {
         // As duas abas Entrar/Cadastrar pertencem a rota publica Login.
-        if (usuarioAtual != null && destino != null && !destino.hasRoute<Login>()) {
+        if (usuarioAtual != null && destino != null &&
+            !destino.hasRoute<Login>() &&
+            !destino.hasRoute<CadastrarUsuario>() &&
+            !destino.hasRoute<CadastroReceita>() &&
+            !destino.hasRoute<CadastroItemCompra>()) {
             Menu(aoReceitas = {
                 navController.navigate(Home) { popUpTo<Home>(); launchSingleTop = true }
             }, aoCompras = {
                 navController.navigate(ListaCompras) { popUpTo<Home>(); launchSingleTop = true }
+            }, aoUsuarios = {
+                navController.navigate(Usuarios) { popUpTo<Home>(); launchSingleTop = true }
             }, aoSair = SessaoUsuario::encerrar)
         }
     }) { padding ->
@@ -58,7 +64,7 @@ fun NavGraph() {
                     }
                     HomeScreen(viewModel = vm,
                         aoClicarReceita = { navController.navigate(DetalheReceita(it)) },
-                        aoNovaReceita = { navController.navigate(CadastroReceita()) })
+                        aoNovaReceita = { navController.navigate(CadastroReceita) })
                 }
             }
             composable<DetalheReceita> { entrada ->
@@ -73,14 +79,14 @@ fun NavGraph() {
                         onDispose { entrada.lifecycle.removeObserver(observador) }
                     }
                     DetalheReceitaScreen(viewModel = vm,
-                        aoEditar = { navController.navigate(CadastroReceita(it)) },
+                        aoEditar = { navController.navigate(ReceitaEditar(it)) },
                         aoVoltar = { navController.popBackStack() })
                 }
             }
-            composable<CadastroReceita> { entrada ->
+            composable<CadastroReceita> {
                 if (usuarioAtual != null) {
                     val vm: ReceitaViewModel = viewModel()
-                    CadastroReceitaScreen(viewModel = vm, receitaId = entrada.toRoute<CadastroReceita>().id,
+                    CadastroReceitaScreen(viewModel = vm,
                         aoSalvar = { navController.popBackStack() }, aoVoltar = { navController.popBackStack() })
                 }
             }
@@ -95,15 +101,58 @@ fun NavGraph() {
                         onDispose { entrada.lifecycle.removeObserver(observador) }
                     }
                     ListaComprasScreen(viewModel = vm,
-                        aoNovo = { navController.navigate(CadastroItemCompra()) },
-                        aoEditar = { navController.navigate(CadastroItemCompra(it)) })
+                        aoNovo = { navController.navigate(CadastroItemCompra) },
+                        aoEditar = { navController.navigate(ItemCompraEditar(it)) })
                 }
             }
-            composable<CadastroItemCompra> { entrada ->
+            composable<CadastroItemCompra> {
                 if (usuarioAtual != null) {
                     val vm: ListaComprasViewModel = viewModel()
-                    CadastroItemCompraScreen(viewModel = vm, itemId = entrada.toRoute<CadastroItemCompra>().id,
+                    CadastroItemCompraScreen(viewModel = vm,
                         aoVoltar = { navController.popBackStack() })
+                }
+            }
+            composable<ReceitaEditar> { entrada ->
+                if (usuarioAtual != null) {
+                    ReceitaEditarScreen(viewModel = viewModel(),
+                        receitaId = entrada.toRoute<ReceitaEditar>().id,
+                        aoSalvar = { navController.popBackStack() },
+                        aoVoltar = { navController.popBackStack() })
+                }
+            }
+            composable<ItemCompraEditar> { entrada ->
+                if (usuarioAtual != null) {
+                    ItemCompraEditarScreen(viewModel = viewModel(),
+                        itemId = entrada.toRoute<ItemCompraEditar>().id,
+                        aoVoltar = { navController.popBackStack() })
+                }
+            }
+            composable<Usuarios> { entrada ->
+                if (usuarioAtual != null) {
+                    val vm: UsuarioViewModel = viewModel()
+                    DisposableEffect(entrada) {
+                        val observador = LifecycleEventObserver { _, evento ->
+                            if (evento == Lifecycle.Event.ON_RESUME) vm.listarUsuarios()
+                        }
+                        entrada.lifecycle.addObserver(observador)
+                        onDispose { entrada.lifecycle.removeObserver(observador) }
+                    }
+                    UsuarioScreen(viewModel = vm,
+                        aoNovoUsuario = { navController.navigate(CadastrarUsuario) },
+                        aoEditarUsuario = { navController.navigate(UsuarioEditar(it)) },
+                        aoVoltar = { navController.popBackStack() })
+                }
+            }
+            composable<CadastrarUsuario> {
+                if (usuarioAtual != null) {
+                    CadastroUsuarioScreen(authViewModel = viewModel(),
+                        aoLogin = { navController.navigate(Login) })
+                }
+            }
+            composable<UsuarioEditar> { entrada ->
+                if (usuarioAtual != null) {
+                    UsuarioEditarScreen(usuarioId = entrada.toRoute<UsuarioEditar>().id,
+                        viewModel = viewModel(), aoVoltar = { navController.popBackStack() })
                 }
             }
         }
