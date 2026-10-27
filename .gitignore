@@ -1,0 +1,13 @@
+# Arquivos gerados pelo Gradle e pelo Kotlin
+.gradle/
+.kotlin/
+build/
+
+# Configuracoes locais do Android Studio e do SDK
+.idea/
+*.iml
+local.properties
+
+# Arquivos gerados por compilacao nativa
+.cxx/
+.externalNativeBuild/

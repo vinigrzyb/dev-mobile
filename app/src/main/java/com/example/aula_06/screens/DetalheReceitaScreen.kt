@@ -4,6 +4,9 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.TextButton
+import com.example.aula_06.ui.viewmodel.ReceitaViewModel
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,20 +22,32 @@ import com.example.aula_06.R
 import com.example.aula_06.ui.theme.*
 
 @Composable
-fun DetalheReceitaScreen(modifier: Modifier = Modifier) {
-
+fun DetalheReceitaScreen(viewModel: ReceitaViewModel, modifier: Modifier = Modifier,
+    aoEditar: (Long) -> Unit, aoVoltar: () -> Unit) {
+    val receita = viewModel.receita
+    var confirmarExclusao by remember { mutableStateOf(false) }
+    LaunchedEffect(viewModel.excluido) {
+        if (viewModel.excluido) { viewModel.consumirResultado(); aoVoltar() }
+    }
+    if (!viewModel.carregado) {
+        Column(modifier.padding(16.dp)) {
+            Text(viewModel.mensagem ?: "Carregando...")
+            TextButton(onClick = aoVoltar) { Text("Voltar") }
+        }
+        return
+    }
+    if (confirmarExclusao) {
+        AlertDialog(onDismissRequest = { confirmarExclusao = false },
+            title = { Text("Excluir receita?") }, text = { Text("Excluir ${receita.nome}?") },
+            confirmButton = { TextButton(onClick = { confirmarExclusao = false; viewModel.excluir() },
+                enabled = !viewModel.carregando) { Text("Confirmar exclusao") } },
+            dismissButton = { TextButton(onClick = { confirmarExclusao = false }) { Text("Cancelar") } })
+    }
     // Controla qual aba esta selecionada (Ingredientes ou Modo de Preparo)
     var abaIngredientes by remember { mutableStateOf(true) }
 
-    val ingredientes = listOf(
-        "Massa de lasanha, carne moida, queijo",
-        "Parmesao, molho de tomate, queijo mussarela"
-    )
-
-    val modoPreparo = listOf(
-        "Cozinhe a massa e prepare o molho",
-        "Monte as camadas e leve ao forno por 30 minutos"
-    )
+    val ingredientes = receita.ingredientes.lines().filter { it.isNotBlank() }
+    val modoPreparo = receita.modoPreparo.lines().filter { it.isNotBlank() }
 
     Column(
         modifier = modifier
@@ -48,15 +63,17 @@ fun DetalheReceitaScreen(modifier: Modifier = Modifier) {
                 .padding(16.dp),
             horizontalArrangement = Arrangement.Center
         ) {
+            TextButton(onClick = aoVoltar) { Text("Voltar") }
             Text(text = "Receitas Diarias", color = AzulEscuro, fontWeight = FontWeight.Medium)
         }
 
         Column(modifier = Modifier.padding(16.dp)) {
 
             // Imagem da receita
+            imagemReceita(receita.imagem)?.let { imagem ->
             Image(
-                painter = painterResource(id = R.drawable.lasanha_bolonhesa),
-                contentDescription = "Lasanha Bolonhesa Classica",
+                painter = painterResource(id = imagem),
+                contentDescription = receita.nome,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -64,19 +81,25 @@ fun DetalheReceitaScreen(modifier: Modifier = Modifier) {
                     .clip(RoundedCornerShape(12.dp))
             )
 
+            }
             Spacer(modifier = Modifier.height(12.dp))
-            Text(text = "Lasanha Bolonhesa Classica", fontWeight = FontWeight.Medium, color = AzulEscuro)
+            Text(text = receita.nome, fontWeight = FontWeight.Medium, color = AzulEscuro)
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            Row {
+                TextButton(onClick = { aoEditar(receita.id) }, enabled = !viewModel.carregando) { Text("Editar") }
+                TextButton(onClick = { confirmarExclusao = true }, enabled = !viewModel.carregando) { Text("Excluir") }
+            }
+            viewModel.mensagem?.let { Text(it) }
             // Informacoes rapidas
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                InfoReceita(titulo = "Tempo", valor = "45 min")
-                InfoReceita(titulo = "Porcoes", valor = "4 pessoas")
-                InfoReceita(titulo = "Dificuldade", valor = "Media")
+                InfoReceita(titulo = "Tempo", valor = receita.tempo.ifBlank { "Nao informado" })
+                InfoReceita(titulo = "Porcoes", valor = receita.porcoes.ifBlank { "Nao informado" })
+                InfoReceita(titulo = "Dificuldade", valor = receita.dificuldade.ifBlank { "Nao informado" })
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -128,6 +151,7 @@ fun DetalheReceitaScreen(modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(12.dp))
 
             // Conteudo da aba selecionada
+            if ((if (abaIngredientes) ingredientes else modoPreparo).isEmpty()) Text("Conteudo ainda nao cadastrado.")
             if (abaIngredientes) {
                 ingredientes.forEach { item -> ItemComCheckbox(texto = item) }
             } else {
@@ -147,20 +171,12 @@ fun InfoReceita(titulo: String, valor: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun ItemComCheckbox(texto: String, modifier: Modifier = Modifier) {
-    var marcado by remember { mutableStateOf(false) }
+    var marcado by remember(texto) { mutableStateOf(false) }
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(checked = marcado, onCheckedChange = { marcado = it })
         Text(text = texto, color = AzulEscuro)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DetalheReceitaScreenPreview() {
-    Aula06Theme {
-        DetalheReceitaScreen()
     }
 }

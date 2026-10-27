@@ -10,6 +10,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,20 +21,35 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.aula_06.ui.theme.*
+import com.example.aula_06.ui.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(modifier: Modifier = Modifier) {
+fun LoginScreen(authViewModel: AuthViewModel, modifier: Modifier = Modifier, aoEntrar: () -> Unit) {
 
     // Controla qual aba esta selecionada (Entrar ou Cadastrar)
-    var abaEntrar by remember { mutableStateOf(true) }
+    var abaEntrar by rememberSaveable { mutableStateOf(true) }
 
-    var email by remember { mutableStateOf("") }
+    var nome by rememberSaveable { mutableStateOf("") }
+    var mensagem by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
+
+    LaunchedEffect(authViewModel.concluido) {
+        if (authViewModel.concluido) {
+            authViewModel.consumirResultado()
+            senha = ""
+            if (abaEntrar) aoEntrar() else {
+                abaEntrar = true
+                mensagem = "Conta criada! Digite sua senha para entrar."
+            }
+        }
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(AzulFundo)
+            .imePadding()
             .verticalScroll(rememberScrollState())
     ) {
         // Topo com titulo
@@ -75,7 +91,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { abaEntrar = true },
+                        .clickable(enabled = !authViewModel.carregando) { abaEntrar = true; mensagem = ""; authViewModel.limparMensagem() },
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -95,7 +111,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .clickable { abaEntrar = false },
+                        .clickable(enabled = !authViewModel.carregando) { abaEntrar = false; mensagem = ""; authViewModel.limparMensagem() },
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -116,8 +132,15 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            if (!abaEntrar) {
+                OutlinedTextField(enabled = !authViewModel.carregando, value = nome, onValueChange = { nome = it },
+                    label = { Text("Nome") }, modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+            }
             // Campo de e-mail
             OutlinedTextField(
+                enabled = !authViewModel.carregando,
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("E-mail") },
@@ -130,6 +153,7 @@ fun LoginScreen(modifier: Modifier = Modifier) {
 
             // Campo de senha
             OutlinedTextField(
+                enabled = !authViewModel.carregando,
                 value = senha,
                 onValueChange = { senha = it },
                 label = { Text("Senha") },
@@ -139,53 +163,32 @@ fun LoginScreen(modifier: Modifier = Modifier) {
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Esqueci a senha?", color = AzulEscuro)
+            Text(text = authViewModel.mensagem ?: mensagem, color = AzulEscuro)
+            if (authViewModel.carregando) Text("Aguarde...")
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Botao de entrar
             Button(
-                onClick = { /* login sera implementado depois */ },
+                onClick = {
+                    mensagem = ""
+                    if (abaEntrar) authViewModel.entrar(email, senha)
+                    else authViewModel.cadastrar(nome, email, senha)
+                    senha = ""
+                },
+                enabled = !authViewModel.carregando,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AzulEscuro)
             ) {
-                Text(text = "Entrar", color = Color.White)
+                Text(text = if (abaEntrar) "Entrar" else "Cadastrar", color = Color.White)
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
 
-            // Login social
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                LoginSocialIcone("G")
-                LoginSocialIcone("F")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "Nao tem conta? Cadastre-se aqui", color = AzulEscuro)
+            Text(text = if (abaEntrar) "Nao tem conta? Cadastre-se aqui" else "Ja tem conta? Entre aqui",
+                color = AzulEscuro, modifier = Modifier.clickable(enabled = !authViewModel.carregando) { abaEntrar = !abaEntrar; mensagem = ""; authViewModel.limparMensagem() })
         }
-    }
-}
-
-@Composable
-fun LoginSocialIcone(letra: String, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .background(AzulTopo),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text = letra, color = AzulEscuro, fontWeight = FontWeight.Medium)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    Aula06Theme {
-        LoginScreen()
     }
 }

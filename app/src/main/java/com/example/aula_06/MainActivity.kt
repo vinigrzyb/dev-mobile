@@ -7,11 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.aula_06.screens.CadastroReceitaScreen
-import com.example.aula_06.screens.DetalheReceitaScreen
-import com.example.aula_06.screens.HomeScreen
-import com.example.aula_06.screens.LoginScreen
 import com.example.aula_06.ui.theme.Aula06Theme
+import com.example.aula_06.navigation.NavGraph
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,10 +18,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    //HomeScreen()
-                    //LoginScreen()
-                    //DetalheReceitaScreen()
-                    CadastroReceitaScreen()
+                    NavGraph()
                 }
             }
         }

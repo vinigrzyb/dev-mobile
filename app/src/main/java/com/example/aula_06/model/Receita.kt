@@ -1,16 +1,13 @@
 package com.example.aula_06.model
 
-import com.example.aula_06.R
-
-// Representa uma receita da lista da Home
-data class Receita(val nome: String, val imagem: Int)
-
-// Lista de receitas exibidas na Home
-val listaReceitas = listOf(
-    Receita("Espaguete a Bolonhesa", R.drawable.espaguete),
-    Receita("Tarta de Morango", R.drawable.tarta_morango),
-    Receita("Sopa de Abobora Cremosa", R.drawable.sopa_abobora),
-    Receita("Salada de Verao", R.drawable.salada_verao),
-    Receita("Mini Hamburgueres de Festa", R.drawable.mini_hamburgueres),
-    Receita("Suco de Laranja Fresco", R.drawable.suco_laranja)
+data class Receita(
+    val id: Long = 0,
+    val nome: String = "",
+    val tempo: String = "",
+    val porcoes: String = "",
+    val dificuldade: String = "",
+    val ingredientes: String = "",
+    val modoPreparo: String = "",
+    // Nome estavel do recurso existente; novos cadastros podem nao ter foto.
+    val imagem: String? = null
 )

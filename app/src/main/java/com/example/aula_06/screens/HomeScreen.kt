@@ -1,5 +1,7 @@
 package com.example.aula_06.screens
 
+import androidx.compose.foundation.clickable
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,11 +24,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.aula_06.model.Receita
-import com.example.aula_06.model.listaReceitas
+import com.example.aula_06.ui.viewmodel.ReceitaViewModel
+import com.example.aula_06.R
 import com.example.aula_06.ui.theme.*
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    viewModel: ReceitaViewModel,
+    aoClicarReceita: (Long) -> Unit,
+    aoNovaReceita: () -> Unit
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -56,13 +64,20 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             )
         }
 
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            TextButton(onClick = aoNovaReceita) { Text("Nova receita") }
+            TextButton(onClick = viewModel::listar, enabled = !viewModel.carregando) { Text("Atualizar") }
+        }
+        viewModel.mensagem?.let { Text(it, modifier = Modifier.padding(12.dp)) }
+        if (viewModel.carregando) Text("Carregando...", modifier = Modifier.padding(12.dp))
+        if (!viewModel.carregando && viewModel.receitas.isEmpty()) Text("Nenhuma receita cadastrada.", modifier = Modifier.padding(12.dp))
         // Grid de receitas (2 colunas)
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier.padding(12.dp)
         ) {
-            items(listaReceitas) { receita ->
-                ReceitaCard(receita)
+            items(viewModel.receitas, key = { it.id }) { receita ->
+                ReceitaCard(receita, Modifier.clickable { aoClicarReceita(receita.id) })
             }
         }
     }
@@ -75,14 +90,16 @@ fun ReceitaCard(receita: Receita, modifier: Modifier = Modifier) {
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = Branco)
     ) {
+        imagemReceita(receita.imagem)?.let { imagem ->
         Image(
-            painter = painterResource(id = receita.imagem),
+            painter = painterResource(id = imagem),
             contentDescription = receita.nome,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
         )
+        }
         Text(
             text = receita.nome,
             modifier = Modifier.padding(8.dp)
@@ -90,10 +107,12 @@ fun ReceitaCard(receita: Receita, modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    Aula06Theme {
-        HomeScreen()
-    }
+internal fun imagemReceita(chave: String?): Int? = when (chave) {
+    "espaguete" -> R.drawable.espaguete
+    "tarta_morango" -> R.drawable.tarta_morango
+    "sopa_abobora" -> R.drawable.sopa_abobora
+    "salada_verao" -> R.drawable.salada_verao
+    "mini_hamburgueres" -> R.drawable.mini_hamburgueres
+    "suco_laranja" -> R.drawable.suco_laranja
+    else -> null
 }
